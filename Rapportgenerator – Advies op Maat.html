@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rapportgenerator – Advies op Maat</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--text:#14202e;--muted:#566272;--line:#d9dee5;--navy:#0f2a44;--navy-text:#f2f5f8;--accent:#e0a21a;--accent-text:#14202e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e141b;--surface:#172029;--text:#e9edf1;--muted:#9aa7b4;--line:#2b3641;--navy:#0a1118;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e141b;--surface:#172029;--text:#e9edf1;--muted:#9aa7b4;--line:#2b3641;--navy:#0a1118;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--navy);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:11;background:var(--navy);color:var(--navy-text);padding:14px 18px}
+header b{font-family:Georgia,serif;font-size:19px}header span{opacity:.7;font-size:13px;display:block}
+main{max-width:760px;margin:0 auto;padding:18px}
+fieldset,.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 16px}
+legend{font-weight:700;padding:0 6px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 3px}
+input,select,textarea{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+textarea{min-height:72px;resize:vertical}
+.row{display:grid;gap:0 12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+button{font:inherit;font-weight:700;border-radius:9px;border:2px solid var(--accent);background:var(--accent);color:var(--accent-text);padding:11px 18px;cursor:pointer}
+button.ghost{background:transparent;color:var(--text);border-color:var(--line)}
+button.sm{padding:6px 12px;font-size:14px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 20px}
+.fh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ph{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ph div{position:relative}.ph img{height:70px;border-radius:6px;display:block}
+.ph button{position:absolute;top:2px;right:2px;padding:0 6px;font-size:13px;border-radius:99px}
+iframe{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;height:700px}
+.note{color:var(--muted);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ln{display:grid;gap:8px;grid-template-columns:1fr 70px 100px 40px;margin-bottom:8px;align-items:center}
+@media(max-width:560px){.ln{grid-template-columns:1fr 1fr 40px}.ln input:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><b>Rapportgenerator</b><span>Privé gebruik · Advies op Maat</span></header>
+<main>
+<details class="card" id="set">
+<summary><b>Mijn gegevens</b> (eenmalig invullen)</summary>
+<div class="row">
+<div><label>Naam / bedrijf</label><input data-m="naam"></div>
+<div><label>E-mail</label><input data-m="mail"></div>
+<div><label>Telefoon</label><input data-m="tel"></div>
+<div><label>BTW- / ondernemingsnummer</label><input data-m='nr'></div><div><label>Adres</label><input data-m='adres'></div><div><label>Rekeningnummer (IBAN)</label><input data-m='iban'></div>
+</div>
+</details>
+
+<fieldset><legend>Klant en woning</legend>
+<div class="row">
+<div><label>Naam klant</label><input data-k="klant"></div>
+<div><label>Adres</label><input data-k="adres"></div>
+<div><label>Datum plaatsbezoek</label><input type="date" data-k="datum"></div>
+<div><label>Bouwjaar woning</label><input data-k="bouwjaar"></div>
+</div>
+<label>Reden van de vraag</label><input data-k="reden" placeholder="bv. verkoop, verbouwing, twijfel over veiligheid">
+<label>Omschrijving van de installatie</label><textarea data-k="install" placeholder="bv. type verdeelkast, aantal groepen, leeftijd van de installatie"></textarea>
+</fieldset>
+
+<div class="fh"><h3 style="margin:8px 0">Bevindingen</h3><button class="sm" id="add">+ Bevinding</button></div>
+<details class="card" id="quick" open><summary><b>Snelle bevindingen</b> (tik om toe te voegen)</summary><label>Ruimte of onderdeel</label><select id="qroom"></select><div class="chips" id="chips"></div></details>
+<div id="list"></div>
+
+<fieldset><legend>Samenvatting</legend>
+<label>Algemene conclusie en volgende stappen</label><textarea data-k="samenvatting" style="min-height:110px"></textarea>
+</fieldset>
+
+<fieldset id='inv'><legend>Factuur</legend>
+<p class='note' style='margin-top:0'>Klantnaam en adres neem ik over uit het rapport.</p>
+<div class='row'>
+<div><label>Factuurnummer</label><input data-v='nr'></div>
+<div><label>Factuurdatum</label><input type='date' data-v='datum'></div>
+<div><label>Betaaltermijn (dagen)</label><input type='number' data-v='termijn'></div>
+<div><label>BTW-tarief</label><select data-v='btw'><option value='21'>21%</option><option value='0'>Vrijgesteld (kleine onderneming)</option></select></div>
+<div><label>BTW-nummer klant (optioneel)</label><input data-v='klantbtw'></div>
+<div><label>Mededeling (leeg = factuurnummer)</label><input data-v='mededeling'></div>
+</div>
+<label style='display:flex;gap:8px;align-items:center;color:var(--text)'><input type='checkbox' data-v='incl' style='width:auto'> Ingevoerde prijzen zijn inclusief btw</label>
+<div class='fh' style='margin-top:14px'><b>Factuurlijnen</b></div>
+<div class='row'><select id='fsel'></select><div><button class='sm' id='fadd'>+ Formule toevoegen</button> <button class='ghost sm' id='addl'>+ Lege lijn</button></div></div>
+<div id='lines' style='margin-top:12px'></div>
+<div id='tot' class='note'></div>
+</fieldset>
+<div class='bar'>
+<button class='ghost' id='prev'>Rapport bekijken</button>
+<button id='dl'>Rapport als PDF</button>
+<button id='dlf'>Factuur als PDF</button>
+<button class='ghost' id='reset'>Nieuw rapport</button>
+</div>
+<p class="note" id="msg">Foto’s worden verkleind en niet bewaard als je de pagina sluit. Maak dus eerst de PDF voor je afsluit. Laat je factuursjabloon nakijken door je boekhouder.</p>
+<iframe id="frame" title="Voorbeeld" hidden></iframe>
+</main>
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'></script>
+<script>
+const $=s=>document.querySelector(s);
+const PR={d:['Dringend','#b3261e'],t:['Op termijn','#b26a00'],i:['Ter info','#365f8a']};
+const today=new Date().toISOString().slice(0,10);
+let S={klant:'',adres:'',datum:today,bouwjaar:'',reden:'',install:'',samenvatting:'',f:[]};
+let me={naam:'',mail:'',tel:'',nr:''};
+const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function load(){try{const a=localStorage.getItem('rg_me');if(a)me=JSON.parse(a);const b=localStorage.getItem('rg_s');if(b){S=JSON.parse(b);S.f.forEach(f=>f.ph=[])}}catch(e){}}
+function save(){try{localStorage.setItem('rg_me',JSON.stringify(me));localStorage.setItem('rg_s',JSON.stringify({...S,f:S.f.map(f=>({...f,ph:[]}))}))}catch(e){}}
+function bind(){
+document.querySelectorAll('[data-k]').forEach(e=>{e.value=S[e.dataset.k]||'';e.oninput=()=>{S[e.dataset.k]=e.value;save()}});
+document.querySelectorAll('[data-m]').forEach(e=>{e.value=me[e.dataset.m]||'';e.oninput=()=>{me[e.dataset.m]=e.value;save()}});
+}
+function draw(){
+$('#list').innerHTML=S.f.map((f,i)=>`<div class="card" data-i="${i}">
+<div class="fh"><b>Bevinding ${i+1}</b><button class="ghost sm" data-act="del">Verwijderen</button></div>
+<div class="row"><div><label>Locatie</label><input data-f="loc" value="${esc(f.loc)}" placeholder="bv. keuken, verdeelkast"></div>
+<div><label>Prioriteit</label><select data-f="pr">${Object.entries(PR).map(([k,v])=>`<option value="${k}"${f.pr===k?' selected':''}>${v[0]}</option>`).join('')}</select></div></div>
+<label>Omschrijving</label><textarea data-f="oms">${esc(f.oms)}</textarea>
+<label>Aanbeveling</label><textarea data-f="aanb">${esc(f.aanb)}</textarea>
+<label>Kostenindicatie</label><input data-f="kost" value="${esc(f.kost)}" placeholder="bv. € 150 – € 300">
+<label>Foto’s</label><input type="file" accept="image/*" multiple data-act="foto">
+<div class="ph">${f.ph.map((p,j)=>`<div><img src="${p}" alt=""><button data-act="rm" data-j="${j}">×</button></div>`).join('')}</div></div>`).join('');
+}
+$('#list').addEventListener('input',e=>{const c=e.target.closest('[data-i]');if(!c||!e.target.dataset.f)return;S.f[c.dataset.i][e.target.dataset.f]=e.target.value;save()});
+$('#list').addEventListener('click',e=>{const c=e.target.closest('[data-i]'),a=e.target.dataset.act;if(!c)return;const i=+c.dataset.i;
+if(a==='del'){S.f.splice(i,1);save();draw()}
+if(a==='rm'){S.f[i].ph.splice(+e.target.dataset.j,1);draw()}});
+$('#list').addEventListener('change',async e=>{if(e.target.dataset.act!=='foto')return;const i=+e.target.closest('[data-i]').dataset.i;
+for(const file of e.target.files){S.f[i].ph.push(await shrink(file))}draw()});
+function shrink(file){return new Promise(r=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,900/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=img.width*k;c.height=img.height*k;c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);r(c.toDataURL('image/jpeg',.72))};img.src=u})}
+$('#add').onclick=()=>{S.f.push({loc:'',pr:'t',oms:'',aanb:'',kost:'',ph:[]});save();draw()};
+function fmt(d){try{return new Date(d).toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'})}catch(e){return d}}
+function report(){
+const order={d:0,t:1,i:2},fs=[...S.f].sort((a,b)=>order[a.pr]-order[b.pr]);
+const cnt=k=>S.f.filter(f=>f.pr===k).length;
+const rows=fs.map((f,n)=>`<div class="f" style="border-left-color:${PR[f.pr][1]}"><div class="fh"><b>${n+1}. ${esc(f.loc)||'Bevinding'}</b><span class="tg" style="background:${PR[f.pr][1]}">${PR[f.pr][0]}</span></div>
+${f.oms?`<p>${esc(f.oms).replace(/\n/g,'<br>')}</p>`:''}${f.aanb?`<p><b>Aanbeveling:</b> ${esc(f.aanb).replace(/\n/g,'<br>')}</p>`:''}${f.kost?`<p><b>Kostenindicatie:</b> ${esc(f.kost)}</p>`:''}
+${f.ph.length?`<div class="ph">${f.ph.map(p=>`<img src="${p}" alt="">`).join('')}</div>`:''}</div>`).join('');
+return `<!DOCTYPE html><html lang="nl-BE"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rapport – ${esc(S.klant)}</title><style>
+body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:#14202e;background:#fff;margin:0;padding:32px;max-width:780px;margin:0 auto}
+h1{font-family:Georgia,serif;font-size:28px;margin:0 0 4px}h2{font-family:Georgia,serif;font-size:19px;border-bottom:2px solid #e0a21a;padding-bottom:4px;margin:28px 0 12px}
+.top{display:flex;justify-content:space-between;gap:16px;border-bottom:3px solid #0f2a44;padding-bottom:14px;margin-bottom:20px;flex-wrap:wrap}.top small{color:#566272;display:block;text-align:right}
+table{border-collapse:collapse;width:100%}td{padding:5px 10px 5px 0;vertical-align:top}td:first-child{color:#566272;width:38%}
+.f{border-left:5px solid;background:#f5f6f8;padding:12px 16px;margin-bottom:14px;border-radius:0 8px 8px 0;page-break-inside:avoid}.f p{margin:6px 0}
+.fh{display:flex;justify-content:space-between;gap:10px}.tg{color:#fff;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;height:fit-content;white-space:nowrap}
+.ph{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.ph img{height:150px;border-radius:6px}
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}.sum span{background:#f5f6f8;border-radius:8px;padding:6px 12px}
+.dis{margin-top:30px;font-size:12px;color:#566272;border-top:1px solid #d9dee5;padding-top:12px}
+</style></head><body>
+<div class="top"><div><h1>Adviesrapport elektrische installatie</h1><div>${esc(me.naam)||'Advies op Maat'}</div></div><small>${esc(me.mail)}<br>${esc(me.tel)}<br>${esc(me.nr)}</small></div>
+<table><tr><td>Klant</td><td>${esc(S.klant)}</td></tr><tr><td>Adres</td><td>${esc(S.adres)}</td></tr><tr><td>Datum plaatsbezoek</td><td>${fmt(S.datum)}</td></tr>
+${S.bouwjaar?`<tr><td>Bouwjaar woning</td><td>${esc(S.bouwjaar)}</td></tr>`:''}${S.reden?`<tr><td>Reden van de vraag</td><td>${esc(S.reden)}</td></tr>`:''}</table>
+${S.install?`<h2>De installatie</h2><p>${esc(S.install).replace(/\n/g,'<br>')}</p>`:''}
+<h2>Samenvatting</h2><div class="sum"><span><b style="color:#b3261e">${cnt('d')}</b> dringend</span><span><b style="color:#b26a00">${cnt('t')}</b> op termijn</span><span><b style="color:#365f8a">${cnt('i')}</b> ter info</span></div>
+<p>${esc(S.samenvatting).replace(/\n/g,'<br>')||'—'}</p>
+<h2>Bevindingen</h2>${rows||'<p>Geen bevindingen genoteerd.</p>'}
+<div class="dis">Dit rapport bevat onafhankelijk advies op basis van een visueel plaatsbezoek op de genoemde datum. Het is geen officieel attest of conformiteitsverklaring en geeft geen garantie op een beoordeling door derden. Kostenindicaties zijn richtwaarden.</div>
+</body></html>`;}
+$('#prev').onclick=()=>{const f=$('#frame');f.hidden=false;f.srcdoc=report();f.scrollIntoView({behavior:'smooth'})};
+$('#reset').onclick=()=>{if(!confirm('Alle ingevulde gegevens van dit rapport wissen?'))return;S={klant:'',adres:'',datum:today,bouwjaar:'',reden:'',install:'',samenvatting:'',f:[]};save();bind();draw();$('#frame').hidden=true;newInv();drawInv()};
+let dls=null;
+const safe=t=>String(t||'').replace(/[^\w-]+/g,'_');
+const ea=t=>esc(t).replace(/'/g,'&#39;');
+const eur=n=>(+n||0).toLocaleString('nl-BE',{style:'currency',currency:'EUR'});
+async function pdf(html,name){
+if(!dls){$('#msg').textContent='Opslaan is hier niet beschikbaar. Open deze pagina in claude.ai.';return false}
+if(!window.html2pdf){$('#msg').textContent='PDF-bibliotheek niet geladen. Controleer je verbinding.';return false}
+const doc=new DOMParser().parseFromString(html,'text/html');
+const css=[...doc.querySelectorAll('style')].map(s=>s.textContent).join('').replace(/body\{/g,'.pdfroot{').replace(/(^|\})([^{}]+)\{/g,(m,a,b)=>a+b.split(',').map(s=>s.trim().startsWith('.pdfroot')?s.trim():'.pdfroot '+s.trim()).join(',')+'{');
+const w=document.createElement('div');w.style.cssText='position:fixed;left:-10000px;top:0;width:760px';
+const el=document.createElement('div');el.className='pdfroot';el.style.cssText='width:760px;box-sizing:border-box;background:#fff';
+el.innerHTML='<style>'+css+'</style>'+doc.body.innerHTML;w.appendChild(el);document.body.appendChild(w);
+$('#msg').textContent='PDF wordt gemaakt…';
+try{const blob=await html2pdf().set({margin:[12,10,12,10],image:{type:'jpeg',quality:0.9},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4'},pagebreak:{mode:['css','legacy']}}).from(el).outputPdf('blob');
+await dls.save({filename:name,data:blob});$('#msg').textContent='PDF opgeslagen.';return true}
+catch(e){if(!e||e.code!=='declined')$('#msg').textContent='Opslaan mislukt ('+((e&&e.code)||'fout')+').';return false}
+finally{w.remove()}}
+$('#dl').onclick=()=>pdf(report(),'Rapport-'+safe(S.klant||'klant')+'-'+S.datum+'.pdf');
+const FORM=[['Eenmalig advies (per uur)',55],['Doorlichting ter plaatse',120],['Advies van A tot Z',290]];
+let INV={};
+function saveInv(){try{localStorage.setItem('rg_inv',JSON.stringify(INV))}catch(e){}}
+function newInv(){INV={nr:me.nextNr||new Date().getFullYear()+'-001',datum:today,termijn:'30',btw:'21',incl:true,klantbtw:'',mededeling:'',lines:[]};saveInv()}
+function initInv(){try{const a=localStorage.getItem('rg_inv');if(a)INV=JSON.parse(a)}catch(e){}
+if(!INV.lines)newInv();
+$('#fsel').innerHTML=FORM.map((f,i)=>`<option value='${i}'>${f[0]} – ${eur(f[1])}</option>`).join('');
+drawInv()}
+function calc(){const r=+INV.btw/100;let ex=0;INV.lines.forEach(l=>{const u=INV.incl&&r?(+l.p||0)/(1+r):(+l.p||0);l.u=u;l.t=u*(+l.n||0);ex+=l.t});return{ex,btw:ex*r,tot:ex*(1+r),r}}
+function tot(){const c=calc();$('#tot').textContent='Excl. btw '+eur(c.ex)+' · btw '+eur(c.btw)+' · totaal '+eur(c.tot)}
+function drawInv(){
+document.querySelectorAll('[data-v]').forEach(e=>{if(e.type==='checkbox')e.checked=!!INV[e.dataset.v];else e.value=INV[e.dataset.v]||''});
+$('#lines').innerHTML=INV.lines.map((l,i)=>`<div class='ln' data-n='${i}'><input data-l='o' value='${ea(l.o)}' placeholder='Omschrijving'><input data-l='n' type='number' step='any' value='${ea(l.n)}' placeholder='Aantal'><input data-l='p' type='number' step='any' value='${ea(l.p)}' placeholder='Prijs'><button class='ghost sm' data-del='1'>×</button></div>`).join('');
+tot()}
+$('#inv').addEventListener('input',e=>{const t=e.target;if(t.dataset.v){INV[t.dataset.v]=t.type==='checkbox'?t.checked:t.value}else if(t.dataset.l){INV.lines[+t.closest('[data-n]').dataset.n][t.dataset.l]=t.value}else return;saveInv();tot()});
+$('#inv').addEventListener('click',e=>{if(e.target.dataset.del){INV.lines.splice(+e.target.closest('[data-n]').dataset.n,1);saveInv();drawInv()}});
+$('#fadd').onclick=()=>{const f=FORM[+$('#fsel').value];INV.lines.push({o:f[0]+(S.adres?' – '+S.adres:'')+(S.datum?' – plaatsbezoek '+fmt(S.datum):''),n:1,p:f[1]});saveInv();drawInv()};
+$('#addl').onclick=()=>{INV.lines.push({o:'',n:1,p:0});saveInv();drawInv()};
+function invoice(){const c=calc(),d=new Date(INV.datum);d.setDate(d.getDate()+(+INV.termijn||0));const vd=d.toISOString().slice(0,10);
+const rows=INV.lines.map(l=>`<tr><td>${esc(l.o)}</td><td class='r'>${esc(l.n)}</td><td class='r'>${eur(l.u)}</td><td class='r'>${eur(l.t)}</td></tr>`).join('');
+return `<!DOCTYPE html><html lang='nl-BE'><head><meta charset='utf-8'><title>Factuur ${esc(INV.nr)}</title><style>
+body{font:14px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;color:#14202e;background:#fff;margin:0;padding:32px}
+h1{font-family:Georgia,serif;font-size:30px;margin:0;letter-spacing:.04em}
+.top{display:flex;justify-content:space-between;gap:16px;border-bottom:3px solid #0f2a44;padding-bottom:14px;margin-bottom:22px}.me{text-align:right;font-size:13px;color:#566272}.me b{color:#14202e;font-size:15px}
+.meta{display:flex;justify-content:space-between;gap:16px;margin-bottom:24px}small{color:#566272}
+table{border-collapse:collapse;width:100%}th{background:#0f2a44;color:#fff;text-align:left;padding:8px 10px;font-size:13px}td{padding:9px 10px;border-bottom:1px solid #d9dee5;vertical-align:top}.r{text-align:right}th.r{text-align:right}
+.tt{width:55%;margin:16px 0 0 auto}.tt td{border:0;padding:4px 10px}.tt .g td{border-top:2px solid #e0a21a;font-weight:700;font-size:16px;padding-top:8px}
+.pay{margin-top:28px;padding:14px 16px;background:#f5f6f8;border-left:5px solid #e0a21a;border-radius:0 8px 8px 0}.n{font-size:12px;color:#566272;margin-top:12px}
+</style></head><body>
+<div class='top'><div><h1>FACTUUR</h1><div>Nr. ${esc(INV.nr)}</div></div><div class='me'><b>${esc(me.naam)||'Advies op Maat'}</b><br>${esc(me.adres).replace(/\n/g,'<br>')}<br>${me.nr?'BTW/ondernemingsnr: '+esc(me.nr)+'<br>':''}${esc(me.mail)} ${esc(me.tel)}</div></div>
+<div class='meta'><div><small>Factuur aan</small><br><b>${esc(S.klant)}</b><br>${esc(S.adres)}${INV.klantbtw?'<br>BTW: '+esc(INV.klantbtw):''}</div><div><small>Factuurdatum</small><br>${fmt(INV.datum)}<br><small>Vervaldatum</small><br>${fmt(vd)}</div></div>
+<table><tr><th>Omschrijving</th><th class='r'>Aantal</th><th class='r'>Prijs excl. btw</th><th class='r'>Totaal excl. btw</th></tr>${rows}</table>
+<table class='tt'><tr><td>Totaal excl. btw</td><td class='r'>${eur(c.ex)}</td></tr><tr><td>BTW ${esc(INV.btw)}%</td><td class='r'>${eur(c.btw)}</td></tr><tr class='g'><td>Totaal te betalen</td><td class='r'>${eur(c.tot)}</td></tr></table>
+${c.r?'':"<p class='n'>Vrijgesteld van btw – kleine onderneming (art. 56bis W.BTW).</p>"}
+<div class='pay'>Gelieve <b>${eur(c.tot)}</b> te betalen vóór ${fmt(vd)}${me.iban?' op rekeningnummer <b>'+esc(me.iban)+'</b>':''} met vermelding van ${esc(INV.mededeling||INV.nr)}.</div>
+</body></html>`}
+function bump(){const m=/^(.*?)(\d+)$/.exec(INV.nr||'');if(m){me.nextNr=m[1]+String(+m[2]+1).padStart(m[2].length,'0');save()}}
+$('#dlf').onclick=async()=>{if(!INV.lines.length){$('#msg').textContent='Voeg eerst minstens één factuurlijn toe.';return}if(await pdf(invoice(),'Factuur-'+safe(INV.nr)+'.pdf'))bump()};
+const Q=[
+{r:'Verdeelkast',t:'Geen eendraadschema',pr:'t',o:'Er is geen actueel eendraadschema aanwezig.',a:'Laat een eendraadschema opmaken dat overeenkomt met de werkelijke installatie.'},
+{r:'Verdeelkast',t:'Groepen niet gelabeld',pr:'i',o:'De groepen in de verdeelkast zijn niet of onduidelijk gelabeld.',a:'Label elke groep duidelijk en leesbaar.'},
+{r:'Verdeelkast',t:'Open of beschadigde kast',pr:'d',o:'De verdeelkast is niet volledig afgedekt of beschadigd. Onderdelen onder spanning kunnen aanraakbaar zijn.',a:'Laat open plaatsen afdekken of de kast herstellen door een erkend installateur.'},
+{r:'Verdeelkast',t:'Verouderde kast',pr:'t',o:'De verdeelkast bevat verouderd materiaal, zoals smeltveiligheden.',a:'Overweeg vervanging door een moderne verdeelkast met automaten.'},
+{r:'Aarding en differentieel',t:'Geen differentieel',pr:'d',o:'Er is geen differentieelschakelaar aanwezig of niet op alle groepen.',a:'Laat een differentieelschakelaar plaatsen of aanvullen.'},
+{r:'Aarding en differentieel',t:'Aarding ontbreekt',pr:'d',o:'De aarding ontbreekt of is niet in orde.',a:'Laat de aardingsinstallatie nakijken en herstellen.'},
+{r:'Aarding en differentieel',t:'Differentieel werkt niet',pr:'d',o:'De differentieelschakelaar schakelt niet bij gebruik van de testknop.',a:'Laat de differentieelschakelaar vervangen.'},
+{r:'Aarding en differentieel',t:'Potentiaalverbinding ontbreekt',pr:'t',o:'De verbinding van metalen leidingen (water, gas) met de aarding ontbreekt.',a:'Laat de hoofdpotentiaalverbinding aanbrengen.'},
+{r:'Badkamer',t:'Stopcontact in zone',pr:'d',o:'Een stopcontact of schakelaar bevindt zich te dicht bij bad of douche.',a:'Verplaats of vervang door een toegelaten uitvoering.'},
+{r:'Badkamer',t:'Aanvullende verbinding ontbreekt',pr:'t',o:'De aanvullende verbinding van metalen delen in de badkamer ontbreekt.',a:'Laat de potentiaalverbinding aanbrengen.'},
+{r:'Badkamer',t:'Ongeschikte verlichting',pr:'t',o:'De verlichting heeft onvoldoende bescherming tegen vocht.',a:'Vervang door armaturen met de juiste beschermingsgraad.'},
+{r:'Badkamer',t:'Wasmachine op gedeelde groep',pr:'i',o:'De wasmachine hangt op een groep met andere verbruikers.',a:'Voorzie een eigen groep.'},
+{r:'Keuken',t:'Zware toestellen gedeelde groep',pr:'t',o:'Zware toestellen zijn niet op een eigen groep aangesloten.',a:'Voorzie een eigen groep per zwaar toestel.'},
+{r:'Keuken',t:'Stopcontact dicht bij water',pr:'t',o:'Een stopcontact bevindt zich te dicht bij de gootsteen.',a:'Verplaats het stopcontact of beveilig het.'},
+{r:'Keuken',t:'Verouderde aansluiting kookplaat',pr:'t',o:'De aansluiting van kookplaat of oven is verouderd of onvoldoende beschermd.',a:'Laat de aansluiting vernieuwen.'},
+{r:'Woon- en slaapkamers',t:'Beschadigde stopcontacten',pr:'t',o:'Er zijn losse of beschadigde stopcontacten en schakelaars.',a:'Vervang de beschadigde onderdelen.'},
+{r:'Woon- en slaapkamers',t:'Onbeschermde kabels',pr:'t',o:'Er zijn zichtbare of onbeschermde kabels.',a:'Werk de kabels weg of bescherm ze.'},
+{r:'Woon- en slaapkamers',t:'Verlengsnoeren als vaste oplossing',pr:'i',o:'Verlengsnoeren worden als vaste oplossing gebruikt.',a:'Laat extra stopcontacten plaatsen.'},
+{r:'Woon- en slaapkamers',t:'Te weinig stopcontacten',pr:'i',o:'Er zijn te weinig stopcontacten voor het gebruik.',a:'Overweeg extra stopcontacten.'},
+{r:'Buiten en tuinhuis',t:'Buitenstopcontact onbeschermd',pr:'d',o:'Een buitenstopcontact heeft onvoldoende bescherming tegen water.',a:'Vervang door een waterdichte uitvoering.'},
+{r:'Buiten en tuinhuis',t:'Tuinhuis zonder beveiliging',pr:'t',o:'De voeding van het tuinhuis of bijgebouw heeft geen eigen beveiliging.',a:'Voorzie een eigen groep met differentieel.'},
+{r:'Buiten en tuinhuis',t:'Kabel niet beschermd',pr:'t',o:'Een buitenkabel of ondergrondse kabel is niet voldoende beschermd.',a:'Laat de kabel beschermen of vervangen.'},
+{r:'Algemeen',t:'Overbelaste groepen',pr:'t',o:'Er zijn aanwijzingen dat groepen overbelast worden.',a:'Laat de belasting per groep nakijken.'},
+{r:'Algemeen',t:'Sporen van oververhitting',pr:'d',o:'Er zijn sporen van oververhitting zoals verkleuring of smeltschade.',a:'Laat de installatie dringend nakijken door een erkend installateur.'},
+{r:'Algemeen',t:'Rookmelders ontbreken',pr:'i',o:'Er zijn geen rookmelders aanwezig.',a:'Plaats rookmelders volgens de geldende aanbevelingen.'}
+];
+const rooms=[...new Set(Q.map(q=>q.r))];
+$('#qroom').innerHTML=rooms.map(r=>'<option>'+r+'</option>').join('');
+function chips(){$('#chips').innerHTML=Q.map((q,i)=>q.r===$('#qroom').value?'<button class="ghost sm" data-q="'+i+'">+ '+q.t+'</button>':'').join('')}
+$('#qroom').onchange=chips;chips();
+$('#chips').onclick=e=>{const b=e.target.closest('[data-q]');if(!b)return;const q=Q[+b.dataset.q];S.f.push({loc:q.r,pr:q.pr,oms:q.o,aanb:q.a,kost:'',ph:[]});save();draw();const l=$('#list').lastElementChild;if(l)l.scrollIntoView({behavior:'smooth'})};
+load();bind();draw();initInv();
+(async()=>{try{dls=await claude.use('downloads')}catch(e){dls=null}if(!dls){$('#dl').hidden=true;$('#dlf').hidden=true}})();
+</script>
+</body>
+</html>
